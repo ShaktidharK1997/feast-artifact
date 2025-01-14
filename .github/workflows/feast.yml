@@ -1,0 +1,35 @@
+name: Feast CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  feast-ci-cd:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install feast
+    
+    - name: Run feast plan on PR
+      if: github.event_name == 'pull_request'
+      run: |
+        cd feature_repo
+        feast plan
+    
+    - name: Run feast apply on merge
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        cd feature_repo
+        feast apply
