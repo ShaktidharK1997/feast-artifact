@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: feast
+      POSTGRES_USER: feast_user
+      POSTGRES_PASSWORD: feast_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  postgres-data:
