@@ -4,7 +4,7 @@ This repository demonstrates how to use Feast feature store for managing feature
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 
 - pip (Python package installer)
 - Git
 
