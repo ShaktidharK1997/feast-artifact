@@ -2,21 +2,6 @@
 
 This repository demonstrates how to use Feast feature store for managing features in a flight delay prediction system. The tutorial covers setting up a feature store, defining feature views, and working with both historical and online features.
 
-## Project Structure
-
-```
-feast-artifact/
-├── feature_repo/
-│   ├── data/
-│   │   └── flights.parquet
-│   ├── Feast.ipynb
-│   ├── feature_definition.py
-│   └── feature_store.yaml
-├── .github/
-│   └── workflows/
-└── integration_code(not_ready)/
-```
-
 ## Prerequisites
 
 - Python 3.8 or higher
