@@ -36,9 +36,9 @@ except Exception as e:
     except Exception as e:
         print(f"Error creating bucket: {e}")
 
-file_path = "data.csv"
-object_name = "data.csv"
-
+file_path = os.path.join("data", "flights.parquet")
+object_name = "flights.parquet"
+print(file_path)
 if not os.path.isfile(file_path):
     print(f"File '{file_path}' does not exist!")
     exit(1)

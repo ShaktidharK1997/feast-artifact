@@ -10,11 +10,15 @@ from feast import (
     Project,
     RequestSource,
 )
+#from feast.infra.offline_stores.file_source import FileSource
+
 from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.on_demand_feature_view import on_demand_feature_view
 from feast.types import Float32, Float64, Int64, String
+from feast.data_format import ParquetFormat
 
+import s3fs
 
 # Define a project for the feature repo
 project = Project(
@@ -29,11 +33,17 @@ flight = Entity(
     description="Flight identifier"
 )
 
+bucket_name = "bucket"
+file_name = "flights.parquet"
+s3_endpoint = "https://localhost:9000" 
+
+
 # Define the data source for flight data
 flight_stats_source = FileSource(
-    name="flight_stats_source",
-    path="data/flights.parquet",
+    path=f"s3://{bucket_name}/{file_name}",  
     timestamp_field="FlightDate",
+    file_format=ParquetFormat(),
+    s3_endpoint_override="http://localhost:9000"  # Changed to http since use_ssl=False
 )
 
 # Define the main feature view
