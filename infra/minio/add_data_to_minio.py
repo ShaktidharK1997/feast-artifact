@@ -7,7 +7,7 @@ import os
 minio_host = "localhost:9000"  
 access_key = "minio_user"      
 secret_key = "minio_password"  
-bucket_name = "bucket"         
+bucket_name = "feast-bucket"         
 
 # Initialize the S3 client with proper MinIO configuration
 s3_client = boto3.client(

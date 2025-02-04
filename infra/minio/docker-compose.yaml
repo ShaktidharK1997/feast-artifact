@@ -1,14 +1,7 @@
-networks:
-  dask-net:
-      name: dask
-      driver: bridge
-  
 services:
   
   minio:
     image: minio/minio:RELEASE.2023-12-14T18-51-57Z
-    networks:
-    - dask-net
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -22,40 +15,3 @@ services:
       retries: 10
     command: server /data --console-address ":9001"
   
-  minio-create-bucket:
-    image: minio/mc
-    networks:
-    - dask-net
-    depends_on:
-      - minio
-    entrypoint: >
-      bash -c "
-      mc alias set minio http://minio:9000 minio_user minio_password &&
-      if ! mc ls minio | grep --quiet bucket; then
-        mc mb minio/bucket
-      else
-        echo 'bucket already exists'
-      fi
-      "
-
-  scheduler:
-    image: ghcr.io/dask/dask:latest
-    networks:
-      - dask-net
-    ports:
-      - "8786:8786"
-      - "8787:8787"
-    command: dask scheduler
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "8786"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  worker:
-    image: ghcr.io/dask/dask:latest
-    networks:
-      - dask-net
-    command: dask worker tcp://scheduler:8786
-    depends_on:
-      - scheduler

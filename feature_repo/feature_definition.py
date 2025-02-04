@@ -33,7 +33,7 @@ flight = Entity(
     description="Flight identifier"
 )
 
-bucket_name = "bucket"
+bucket_name = "feast-bucket"
 file_name = "flights.parquet"
 s3_endpoint = "https://localhost:9000" 
 
