@@ -1,0 +1,11 @@
+project: flight_delay_project
+provider: local
+registry:
+  registry_type: sql
+  path: postgresql+psycopg2://postgres:mysecretpassword@registry:5432/feast
+online_store:
+  type: redis
+  connection_string: redis:6379
+offline_store:
+  type: file
+entity_key_serialization_version: 2
