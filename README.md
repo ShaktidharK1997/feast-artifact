@@ -1,73 +1,56 @@
-# Flight Delay Prediction using Feast Feature Store
+# Flight Delay Prediction with Feast Feature Store
 
-This repository demonstrates how to use Feast feature store for managing features in a flight delay prediction system. The tutorial covers setting up a feature store, defining feature views, and working with both historical and online features.
+This repository demonstrates how to use Feast feature store for managing ML features in a flight delay prediction system. It shows how to set up a feature repository, define entities and feature views, and work with both historical and real-time features.
 
-## Prerequisites
+## Quick Start
 
-- Python 
-- pip (Python package installer)
-- Git
+### 1. Start the Jupyter Notebook 
 
-## Getting Started
-
-### 1. Clone the Repository
+Launch the Docker containers for Jupyter in the SSH terminal : 
 
 ```bash
-git clone https://github.com/ShaktidharK1997/feast-artifact.git
-cd feast-artifact
+docker-compose -f /home/cc/feast-artifact/docker/docker-compose-feast.yml jupyter up -d
 ```
 
-### 2. Set Up Python Environment
+### 2. Access Jupyter Notebook
 
-Install required packages for Python environment
+Check the Jupyter server logs to get the access URL:
 
 ```bash
-pip install -r requirements.txt
+docker logs jupyter
 ```
 
-### 3. Initialize Feast Feature Store
+Look for a URL that looks like `http://127.0.0.1:8888/?token=...` in the output and open it in your browser.
 
-Navigate to the feature repository directory:
+### 3. Follow the Tutorial
+
+Navigate to `/work/workspace/feast_tutorial.ipynb` in the Jupyter interface and follow along with the tutorial. The notebook includes:
+
+- Setting up a Feast feature repository
+- bringing up Feast infrastructure
+- Defining entities and feature views
+- Retrieving historical features for model training
+- Serving real-time features for prediction
+- Implementing a streaming pipeline for feature updates
+
+## Repository Structure
+
+- `workspace/feature_repo/`: Contains Feast configuration and feature definitions
+  - `data_sources.py`: Defines data sources (file, push)
+  - `entities.py`: Defines the flight entity
+  - `features.py`: Defines feature views
+  - `feature_services.py`: Groups features for different models
+  - `feature_store.yaml`: Main configuration file
+
+- `workspace/feast_tutorial.ipynb`: Step-by-step tutorial notebook
+- `dags/`: Airflow DAGs for scheduled feature materialization
+- `docker/`: Docker Compose configurations
+
+## Cleanup
+
+When finished, stop all services:
 
 ```bash
-cd feature_repo
-feast apply
+docker-compose -f /home/cc/feast-artifact/docker/docker-compose-feast.yml down
+docker-compose -f /home/cc/feast-artifact/docker/docker-compose-airflow.yml down
 ```
-
-This command will:
-- Register your feature definitions
-- Create necessary infrastructure
-- Set up the online store
-
-### 4. Run the Tutorial
-
-Open and run the Jupyter notebook:
-
-```bash
-jupyter notebook Feast.ipynb
-```
-
-The notebook contains:
-- Feature store initialization
-- Historical feature retrieval examples
-- Online feature serving examples
-- Real-time feature updates demonstration
-
-### 5. Clean Up
-
-After completing the tutorial, clean up the feature store:
-
-```bash
-feast teardown
-```
-
-This will remove all feature store infrastructure created during the tutorial.
-
-## Tutorial Contents
-
-1. **Feature Definitions**: Understanding how to define entities, feature views, and feature services
-2. **Historical Features**: Working with point-in-time correct feature retrieval
-3. **Online Features**: Real-time feature serving capabilities
-4. **Feature Store Operations**: Materialization and feature updates
-5. **Real-time Updates**: Simulating streaming data updates
-
