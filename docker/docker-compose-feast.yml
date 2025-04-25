@@ -1,0 +1,143 @@
+---
+services:
+
+  redpanda:
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      # Address the broker advertises to clients that connect to the Kafka API.
+      # Use the internal addresses to connect to the Redpanda brokers'
+      # from inside the same Docker network.
+      # Use the external addresses to connect to the Redpanda brokers'
+      # from outside the Docker network.
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      # Address the broker advertises to clients that connect to the HTTP Proxy.
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      # Redpanda brokers use the RPC API to communicate with each other internally.
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      # Mode dev-container uses well-known configuration properties for development in containers.
+      - --mode dev-container
+      # Tells Seastar (the framework Redpanda uses under the hood) to use 1 core on the system.
+      - --smp 1
+      - --default-log-level=info
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.5
+    container_name: redpanda
+    volumes:
+      - redpanda:/var/lib/redpanda/data
+    networks:
+      - feast_network
+    ports:
+      - 18081:18081
+      - 18082:18082
+      - 19092:19092
+      - 19644:9644
+
+  console:
+    container_name: redpanda-console
+    image: docker.redpanda.com/redpandadata/console:v2.7.2
+    networks:
+      - feast_network
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:9092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda
+    
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      - feast_network 
+    ports:
+      - "6379:6379"
+
+  registry:
+    container_name: registry
+    image: postgres:10.5
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=feast
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS="--data-checksums"
+    ports:
+      - "55001:5432"
+    networks:
+      - feast_network
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 5
+  
+  jupyter:
+    image: quay.io/jupyter/minimal-notebook:latest # latest image is not compatible with apache-flink
+    container_name: jupyter
+    ports:
+      - "8888:8888"
+    networks:
+      - feast_network
+    volumes:
+      - /home/cc/feast-artifact/workspace:/home/jovyan/work/workspace
+    command: >
+      bash -c "python3 -m pip install boto3 pandas kafka feast[redis,postgres] kafka-python-ng psycopg2-binary && start-notebook.sh"
+  
+  minio:
+    image: minio/minio
+    container_name: minio
+    networks:
+      - feast_network
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    volumes:
+      - /home/cc/feast-artifact/workspace/feature_repo:/tmp/flights.parquet
+    networks:
+      - feast_network
+    entrypoint: |
+      /bin/sh -c "
+      sleep 5
+      
+      mc alias set minio http://minio:9000 minioadmin minioadmin
+      mc mb -p minio/feast
+      mc cp /tmp/flights_v1.parquet minio/feast/
+      mc anonymous set public minio/feast
+
+      echo 'MinIO initalized and flights parquet file uploaded to feast bucket.'
+      "
+
+networks:
+  feast_network:
+    name: feast_network
+    driver: bridge
+
+volumes:
+  redpanda: null
+  postgres_data: null
