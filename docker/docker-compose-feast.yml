@@ -89,7 +89,9 @@ services:
       retries: 5
   
   jupyter:
-    image: quay.io/jupyter/minimal-notebook:latest # latest image is not compatible with apache-flink
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
     container_name: jupyter
     ports:
       - "8888:8888"
@@ -97,9 +99,16 @@ services:
       - feast_network
     volumes:
       - /home/cc/feast-artifact/workspace:/home/jovyan/work/workspace
-    command: >
-      bash -c "python3 -m pip install boto3 pandas kafka feast[redis,postgres] kafka-python-ng psycopg2-binary && start-notebook.sh"
-  
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_EC2_METADATA_DISABLED=true
+      - AWS_ALLOW_HTTP=true
+      - AWS_S3_ALLOW_UNSAFE_RENAME=true
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - S3_ENDPOINT_URL=http://minio:9000
+    
   minio:
     image: minio/minio
     container_name: minio
@@ -118,7 +127,7 @@ services:
     depends_on:
       - minio
     volumes:
-      - /home/cc/feast-artifact/workspace/feature_repo:/tmp/flights.parquet
+      - /home/cc/feast-artifact/workspace/feature_repo:/tmp/feature_repo
     networks:
       - feast_network
     entrypoint: |
@@ -127,7 +136,7 @@ services:
       
       mc alias set minio http://minio:9000 minioadmin minioadmin
       mc mb -p minio/feast
-      mc cp /tmp/flights_v1.parquet minio/feast/
+      mc cp /tmp/feature_repo/data/flights_v1.parquet minio/feast/
       mc anonymous set public minio/feast
 
       echo 'MinIO initalized and flights parquet file uploaded to feast bucket.'

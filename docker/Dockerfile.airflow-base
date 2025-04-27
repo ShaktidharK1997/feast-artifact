@@ -1,0 +1,14 @@
+FROM apache/airflow:2.9.3-python3.11
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+# Install the specific Feast PR
+RUN pip install 'git+https://github.com/feast-dev/feast.git@refs/pull/5208/head' && \
+    # Install optional dependencies
+    pip install redis psycopg2-binary s3fs dask && \
+    # Verify installation
+    python -c "import feast; print('Successfully installed Feast')"

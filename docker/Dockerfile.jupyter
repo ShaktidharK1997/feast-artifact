@@ -1,0 +1,34 @@
+FROM quay.io/jupyter/minimal-notebook:latest
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+USER ${NB_UID}
+
+# Install Python packages including required dependencies
+RUN python -m pip install --no-cache-dir \
+    boto3 \
+    pandas \
+    kafka \
+    kafka-python-ng \
+    psycopg2-binary \
+    typeguard \
+    redis \
+    psycopg2-binary \
+    s3fs \
+    dask
+
+# Install feast from PR #5208
+RUN pip install 'git+https://github.com/feast-dev/feast.git@refs/pull/5208/head' && \
+    # Install optional dependencies
+    pip install redis psycopg2-binary && \
+    # Verify installation
+    python -c "import feast; print(f'Successfully installed Feast')"
+
+# Set working directory
+WORKDIR /home/jovyan/work

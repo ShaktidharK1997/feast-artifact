@@ -1,6 +1,7 @@
 import os
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
+import feast
 from feast import RepoConfig, FeatureStore
 import pendulum
 from pathlib import Path
